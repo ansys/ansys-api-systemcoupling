@@ -14,9 +14,9 @@ jobs:
     name: Build package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install build requirements
@@ -31,10 +31,10 @@ jobs:
         run: |
           mkdir tmp
           cd tmp
-          python -c "import {{ cookiecutter._dot_package_name_no_ver }}.v{{ cookiecutter.api_version }}; print('Sucessfully imported {{ cookiecutter._dot_package_name_no_ver }}.v{{ cookiecutter.api_version }}')"
-          python -c "from {{ cookiecutter._dot_package_name_no_ver }}.v{{ cookiecutter.api_version }} import __version__; print(__version__)"
+          python -c "import ansys.api.systemcoupling.v0; print('Sucessfully imported ansys.api.systemcoupling.v0')"
+          python -c "from ansys.api.systemcoupling import __version__; print(__version__)"
       - name: Upload packages
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ansys-api-systemcoupling-packages
           path: dist/
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.10
 
@@ -64,7 +64,7 @@ jobs:
       #     twine upload --skip-existing ./**/*.tar.gz
       #   env:
       #     TWINE_USERNAME: __token__
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }} 
+      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
