@@ -14,9 +14,9 @@ jobs:
     name: Build package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: "3.7"
       - name: Install build requirements
@@ -34,7 +34,7 @@ jobs:
           python -c "import ansys.api.systemcoupling.v0; print('Sucessfully imported ansys.api.systemcoupling.v0')"
           python -c "from ansys.api.systemcoupling import __version__; print(__version__)"
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: ansys-api-systemcoupling-packages
           path: dist/
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: 3.10
 
