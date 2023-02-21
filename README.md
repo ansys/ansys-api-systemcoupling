@@ -13,9 +13,6 @@ installed with:
 pip install ansys-api-systemcoupling
 ```
 
-Otherwise, see the
-
-
 #### Build
 
 To build the gRPC packages, run:
