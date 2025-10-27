@@ -36,7 +36,7 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v3
         with:
-          name: ansys-api-systemcoupling-packages
+          name: ansys-api-systemcoupling-artifacts
           path: dist/
           retention-days: 7
 
@@ -44,25 +44,24 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
     needs: [build]
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: write
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: "Download the library artifacts from build-library step"
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          python-version: "3.10"
+          name: ansys-api-systemcoupling-artifacts
+          path: ansys-api-systemcoupling-artifacts
 
-      - uses: actions/download-artifact@v2
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Upload to Public PyPi
-        run: |
-          pip install twine
-          twine upload --skip-existing ./**/*.whl
-          twine upload --skip-existing ./**/*.tar.gz
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      - name: "Upload artifacts to PyPI using trusted publisher"
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        with:
+          repository-url: "https://upload.pypi.org/legacy/"
+          print-hash: true
+          packages-dir: ansys-api-systemcoupling-artifacts
+          skip-existing: false
 
       - name: Release
         uses: softprops/action-gh-release@v1
