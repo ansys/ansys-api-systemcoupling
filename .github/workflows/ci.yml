@@ -34,7 +34,7 @@ jobs:
           python -c "import ansys.api.systemcoupling.v0; print('Sucessfully imported ansys.api.systemcoupling.v0')"
           python -c "from ansys.api.systemcoupling import __version__; print(__version__)"
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ansys-api-systemcoupling-artifacts
           path: dist/
