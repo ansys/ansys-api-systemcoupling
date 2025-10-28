@@ -12,11 +12,11 @@ on:
 jobs:
   build:
     name: Build package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.7"
       - name: Install build requirements
@@ -34,9 +34,9 @@ jobs:
           python -c "import ansys.api.systemcoupling.v0; print('Sucessfully imported ansys.api.systemcoupling.v0')"
           python -c "from ansys.api.systemcoupling import __version__; print(__version__)"
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: ansys-api-systemcoupling-packages
+          name: ansys-api-systemcoupling-artifacts
           path: dist/
           retention-days: 7
 
@@ -44,28 +44,27 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
     needs: [build]
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: write
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: "Download the library artifacts from build-library step"
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          python-version: "3.10"
+          name: ansys-api-systemcoupling-artifacts
+          path: ansys-api-systemcoupling-artifacts
 
-      - uses: actions/download-artifact@v2
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Upload to Public PyPi
-        run: |
-          pip install twine
-          twine upload --skip-existing ./**/*.whl
-          twine upload --skip-existing ./**/*.tar.gz
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      - name: "Upload artifacts to PyPI using trusted publisher"
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        with:
+          repository-url: "https://upload.pypi.org/legacy/"
+          print-hash: true
+          packages-dir: ansys-api-systemcoupling-artifacts
+          skip-existing: false
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         with:
           generate_release_notes: true
           files: |
