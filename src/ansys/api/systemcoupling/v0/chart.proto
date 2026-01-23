@@ -60,7 +60,7 @@ message SeriesData {
 	int32 start_index = 3;
 	// The series data. This is always indexed by iteration. Extract time
 	// step-based data by using a time step to iteration mapping.
-	repeated float data = 4;
+	repeated double data = 4;
 }
 
 
