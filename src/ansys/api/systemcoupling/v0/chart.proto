@@ -74,7 +74,7 @@ message TimestepStart {
 	// For the first timestep, this is the timestep size. For subsequent
 	// timesteps, the timestep size can be determined by subtracting the previous
 	// time value from the current time value.
-	float time = 2;
+	double time = 2;
 }
 
 // Message providing notification and details of the end of a timestep in a transient analysis.
@@ -116,7 +116,7 @@ message TimestepData {
 	// The mapping of timestep count to iteration index.
 	repeated int32 timestep_to_iteration = 1;
 	// The time values for each timestep.
-	repeated float time_values = 2;
+	repeated double time_values = 2;
 }
 
 // Service for querying chart data, both as a "live" stream during a solve
