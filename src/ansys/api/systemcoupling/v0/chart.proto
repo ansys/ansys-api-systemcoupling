@@ -81,10 +81,10 @@ message TimestepStart {
 // This message is intended for use in live updates. See TimestepData for
 // cumulative timestep information.
 message TimestepEnd {
-	// The ending iteration for the timestep.
-	int32 iteration = 1;
 	// The timestep count of the ended timestep.
-	int32 timestep_count = 2;
+	int32 timestep_count = 1;
+	// The ending iteration for the timestep.
+	int32 iteration = 2;
 }
 
 // Chart data event that can contain different types of chart data.
