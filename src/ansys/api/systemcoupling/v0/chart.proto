@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package ansys.api.systemcoupling.v0;
+
+// Enum containing the different types of chart series.
+enum TransferSeriesType {
+  SERIES_TYPE_UNKNOWN=0;
+  SERIES_TYPE_CONVERGENCE = 1;
+  SERIES_TYPE_SUM = 2;
+  SERIES_TYPE_WEIGHTED_AVERAGE = 3;
+}
+
+// Information about the chart series data associated with a data transfer.
+message TransferSeriesInfo {
+	// The type of line series.
+	TransferSeriesType series_type = 1;
+	// The unique internal name of the data transfer.
+	string transfer_name = 2;
+	// The unique internal name of the participant. This is required for transfer value series
+	// but is empty for CONVERGENCE series. Used in chart labelling.
+	string participant_name = 3;
+	// The suffix for this component series, if applicable. This is only needed for
+	// transfer value series that have multiple components, such as complex or vector
+	// values. Suffixes for complex components are "real" and "imag", and suffixes for
+	// vector components are "x", "y", and "z". A combination is possible, such as
+	// "y real" and "x imag". (Empty for CONVERGENCE series)
+	string component_suffix = 4;
+}
+
+// Information about the chart series data associated with a single interface.
+message InterfaceInfo {
+	// The name of the coupling interface data model object.
+	string interface_name = 1;
+	// The list of TransferSeriesInfo associated with this interface.
+	repeated TransferSeriesInfo transfer_info = 2;
+}
+
+// Complete metadata for available chart series.
+message ChartMetadata {
+	// Whether the chart is for a transient analysis.
+	bool is_transient = 1;
+	// The metadata for the series associated with each interface.
+	repeated InterfaceInfo interface_info = 2;
+}
+
+// The plot data for a single chart line series and information to allow
+// it to be associated with chart metadata.
+// An instance of this type is assumed to be associated with a single interface.
+// This message supports per-iteration incremental data, batched data for a
+// subset of iterations, or complete data for all iterations.
+message SeriesData {
+	// The name of the interface this series is associated with.
+	string interface_name = 1;
+	// Index of the TransferSeriesInfo metadata for this series within the
+	// InterfaceInfo for the interface this series is associated with.
+	int32 transfer_series_index = 2;
+	// The 0-based start index of the data field. This defaults to 0 and
+	// only needs to be set to a different value if incremental data, such
+	// as might arise during "live" update of plots, has become available.
+	// Data indexes correspond to iterations. Iteration N will have an
+	// index of N-1.
+	int32 start_index = 3;
+	// The series data. This is always indexed by iteration. Extract time
+	// step-based data by using a time step to iteration mapping.
+	repeated double data = 4;
+}
+
+
+// Message providing notification and details of a new timestep in a transient analysis.
+// This message is intended for use in live updates. See TimestepData for
+// cumulative timestep information.
+message TimestepStart {
+	// The timestep count of the new timestep.
+	int32 timestep_count = 1;
+	// The end time of the current timestep.
+	// For the first timestep, this is the timestep size. For subsequent
+	// timesteps, the timestep size can be determined by subtracting the previous
+	// time value from the current time value.
+	double time = 2;
+}
+
+// Message providing notification and details of the end of a timestep in a transient analysis.
+// This message is intended for use in live updates. See TimestepData for
+// cumulative timestep information.
+message TimestepEnd {
+	// The timestep count of the ended timestep.
+	int32 timestep_count = 1;
+	// The ending iteration for the timestep. NB: This is a 1-based iteration count.
+	int32 iteration_count = 2;
+}
+
+// Chart data event that can contain different types of chart data.
+// The first event in a stream will typically contain interface metadata,
+// followed by series data and timestep data as they become available.
+message ChartDataEvent {
+	oneof event_data {
+		// Metadata containing information about the available series.
+		ChartMetadata metadata = 1;
+		// Series data for a specific chart line series.
+		SeriesData series_data = 2;
+		// Timestep start notification for transient analyses.
+		TimestepStart timestep_start = 3;
+		// Timestep end notification for transient analyses.
+		TimestepEnd timestep_end = 4;
+	}
+}
+
+// Message providing all series data for all interfaces.
+// For use in post-solve, non-streaming retrieval of chart data.
+message AllSeriesData {
+	// List of all available series data.
+	repeated SeriesData series_data = 1;
+}
+
+// Message providing all timestep data for transient analyses.
+// For use in post-solve, non-streaming retrieval of chart data.
+message TimestepData {
+	// The mapping of timestep count to iteration count.
+	// NB: these are 1-based step and iteration counts.
+	repeated int32 timestep_to_iteration = 1;
+	// The time values for each timestep.
+	repeated double time_values = 2;
+}
+
+// Service for querying chart data, both as a "live" stream during a solve
+// and as non-streaming requests for data after a solve has been performed.
+service ChartData {
+	// Streams chart data events starting with interface metadata followed by
+	// series data and timestep data as they become available on the server.
+	// For transient cases, timestep data will be included in the stream.
+	rpc StreamChartData(ChartDataRequest) returns (stream ChartDataEvent);
+
+	// The following RPCs provide non-streaming access to chart data.
+	// This should be available as long as a solve has been performed
+	// in the current session.
+
+	// Retrieves the chart metadata for all available series.
+	rpc GetChartMetadata(ChartMetadataRequest) returns (ChartMetadata);
+	// Retrieves all data for all chart series.
+	rpc GetChartSeriesData(ChartSeriesDataRequest) returns (AllSeriesData);
+	// Retrieves all data for all chart timesteps.
+	rpc GetChartTimestepData(ChartTimestepDataRequest) returns (TimestepData);
+}
+
+// Request message for chart data streaming.
+message ChartDataRequest {
+}
+
+// Request message for chart metadata retrieval.
+message ChartMetadataRequest {
+}
+
+// Request message for all chart series data retrieval.
+message ChartSeriesDataRequest {
+}
+
+// Request message for chart timestep data retrieval.
+message ChartTimestepDataRequest {
+}
